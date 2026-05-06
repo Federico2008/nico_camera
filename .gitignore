@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.wav
+*.log
+venv/
+.venv/
+nico.db
+.claude/settings.local.json
+.lgd-nfy0
