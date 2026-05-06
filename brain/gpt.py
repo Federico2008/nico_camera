@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Iterator
 from typing import Sequence
 
 from openai import OpenAI, APIError, APIConnectionError, RateLimitError
@@ -39,6 +40,34 @@ def chat(user_text: str, context: str = "") -> str:
     system = _build_system(context)
     messages = [{"role": "user", "content": user_text}]
     return _complete(config.BRAIN_MODEL, system, messages)
+
+
+def chat_stream(user_text: str, context: str = "") -> Iterator[str]:
+    """
+    Versione streaming di chat() — yield token per token.
+    Il chiamante accumula in frasi e passa a tts.speak() man mano.
+    Errori di rete vengono yielded come stringa di fallback.
+    """
+    system = _build_system(context)
+    client = _get_client()
+    try:
+        stream = client.chat.completions.create(
+            model=config.BRAIN_MODEL,
+            messages=[{"role": "system", "content": system},
+                      {"role": "user",   "content": user_text}],
+            stream=True,
+        )
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta
+    except RateLimitError:
+        yield "Ho bisogno di un momento, riprova tra poco."
+    except APIConnectionError:
+        yield "Non riesco a connettermi. Controlla la rete."
+    except APIError as exc:
+        logger.error("Errore API streaming: %s", exc)
+        yield "Si è verificato un errore. Riprova."
 
 
 def chat_with_vision(

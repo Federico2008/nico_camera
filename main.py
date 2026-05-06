@@ -19,7 +19,7 @@ from audio.stt import STT
 from audio.tts import speak
 from audio.wake_word import WakeWordDetector
 from brain.context_builder import build as build_context
-from brain.gpt import chat, chat_with_vision
+from brain.gpt import chat, chat_stream, chat_with_vision
 from brain.response_cache import cache_response, get_cached, try_direct_answer
 from brain.router import IntentType, RequestClass, classify, detect_intent
 from memory.aggregator import start_background as start_aggregator
@@ -97,6 +97,35 @@ def _on_wake_word() -> None:
         _interaction_lock.release()
 
 
+def _stream_to_voice(token_iter, min_chars: int = 20) -> str:
+    """
+    Consuma uno stream di token GPT, parla frase per frase non appena
+    si raggiunge un boundary (. ! ?) dopo min_chars caratteri.
+    Restituisce il testo completo per il caching.
+    """
+    buf = ""
+    spoken: list[str] = []
+    for tok in token_iter:
+        buf += tok
+        while len(buf) >= min_chars:
+            end = -1
+            for i in range(min_chars - 1, len(buf)):
+                if buf[i] in ".!?" and (i + 1 >= len(buf) or buf[i + 1] in " \n"):
+                    end = i
+                    break
+            if end == -1:
+                break
+            sentence = buf[: end + 1].strip()
+            if sentence:
+                speak(sentence)
+                spoken.append(sentence)
+            buf = buf[end + 1 :].lstrip()
+    if buf.strip():
+        speak(buf.strip())
+        spoken.append(buf.strip())
+    return " ".join(spoken)
+
+
 def _interact() -> None:
     if _privacy:
         _privacy.led_blink()
@@ -128,8 +157,7 @@ def _interact() -> None:
                 speak(intent.response)
                 return
             if intent.gpt_prompt is not None:
-                reply = chat(intent.gpt_prompt, intent.gpt_context or "")
-                speak(reply)
+                _stream_to_voice(chat_stream(intent.gpt_prompt, intent.gpt_context or ""))
                 return
 
         result = classify(text)
@@ -140,9 +168,8 @@ def _interact() -> None:
         if result.cls == RequestClass.C:
             _handle_vision(text, context)
         else:
-            reply = chat(text, context)
+            reply = _stream_to_voice(chat_stream(text, context))
             cache_response(text, reply)
-            speak(reply)
     finally:
         if _privacy and _privacy.is_monitoring_allowed():
             _privacy.led_on()
@@ -274,7 +301,7 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------
     print("=== 1. interazione Classe A (nessuna camera) ===")
     spoken.clear()
-    _stt_queries.append("che ore sono")
+    _stt_queries.append("dimmi una barzelletta")
     _interact()
     print(f"  speak() chiamato {len(spoken)} volte: {spoken}")
     assert any("risposta" in s for s in spoken), f"risposta attesa, got {spoken}"
