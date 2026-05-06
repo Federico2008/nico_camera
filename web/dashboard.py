@@ -63,8 +63,6 @@ def api_sessions():
 
 
 def start(host: str = "0.0.0.0", port: int = 5000) -> None:
-    import os
-    os.environ["WERKZEUG_RUN_MAIN"] = "true"
     t = threading.Thread(
         target=lambda: app.run(host=host, port=port, debug=False, use_reloader=False),
         daemon=True,
