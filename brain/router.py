@@ -97,13 +97,14 @@ def classify(text: str) -> RoutingResult:
 # ---------------------------------------------------------------------------
 
 class IntentType(str, Enum):
-    REMINDER       = "reminder"        # "ricordami di X alle Y"
-    ALARM          = "alarm"           # "imposta sveglia alle Y"
-    SEARCH_NOTES   = "search_notes"    # "che idee avevo su X"
-    SEARCH_SHOPPING = "search_shopping" # "ricordami cosa dovevo comprare per X"
-    WEEKLY_SUMMARY = "weekly_summary"  # "riassumi la mia settimana"
-    STUDY_PLAN     = "study_plan"      # "fammi piano studio per domani"
-    NONE           = "none"
+    REMINDER        = "reminder"         # "ricordami di X alle Y"
+    ALARM           = "alarm"            # "imposta sveglia alle Y"
+    ADD_NOTE        = "add_note"         # "segna nota: X" / "ricorda che X"
+    SEARCH_NOTES    = "search_notes"     # "che idee avevo su X"
+    SEARCH_SHOPPING = "search_shopping"  # "ricordami cosa dovevo comprare per X"
+    WEEKLY_SUMMARY  = "weekly_summary"   # "riassumi la mia settimana"
+    STUDY_PLAN      = "study_plan"       # "fammi piano studio per domani"
+    NONE            = "none"
 
 
 @dataclass
@@ -122,6 +123,13 @@ _REMINDER_PATTERNS = [
 _ALARM_PATTERNS = [
     r"(?:imposta|metti)\s+(?:una\s+)?sveglia\s+(?:alle|per le)\s+(\d{1,2})(?::(\d{2}))?",
     r"svegliami\s+(?:alle|per le)\s+(\d{1,2})(?::(\d{2}))?",
+]
+_ADD_NOTE_PATTERNS = [
+    r"segna\s+(?:una\s+)?nota[:\s]+(.+)",
+    r"ricorda\s+che\s+(.+)",
+    r"annota\s+(?:che\s+)?(.+)",
+    r"aggiungi\s+(?:una\s+)?nota[:\s]+(.+)",
+    r"salva\s+(?:questa\s+)?idea[:\s]+(.+)",
 ]
 _NOTES_SEARCH_PATTERNS = [
     r"che\s+idee\s+avevo\s+su\s+(.+)",
@@ -190,6 +198,18 @@ def detect_intent(text: str) -> IntentResult:
     import memory.db as db
 
     low = text.lower().strip()
+
+    # -- ADD NOTE --
+    for pat in _ADD_NOTE_PATTERNS:
+        m = re.search(pat, low)
+        if m:
+            note_text = m.group(1).strip().capitalize()
+            note_id = db.add_note(text=note_text, category="voce")
+            return IntentResult(
+                intent=IntentType.ADD_NOTE,
+                response=f"Nota salvata: {note_text}.",
+                data={"note_id": note_id},
+            )
 
     # -- ALARM --
     for pat in _ALARM_PATTERNS:

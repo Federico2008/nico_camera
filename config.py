@@ -47,6 +47,11 @@ CAMERA_RESOLUTION = (640, 480)
 PASSIVE_LOOP_MIN_INTERVAL_S = 60   # moondream su CPU ~2min → ogni minuto è realistico
 PASSIVE_LOOP_BUFFER_S = 5
 
+# --- STT (Whisper VAD) ---
+STT_SILENCE_RMS_THRESHOLD = int(os.getenv("STT_SILENCE_RMS_THRESHOLD", "300"))  # int16 scale
+STT_SILENCE_DURATION_S    = float(os.getenv("STT_SILENCE_DURATION_S", "2.0"))   # secondi silenzio per stop
+STT_MIN_SPEECH_S          = float(os.getenv("STT_MIN_SPEECH_S", "0.5"))         # secondi minimi prima del VAD
+
 # Domande fisse inviate a moondream ad ogni frame passivo
 PASSIVE_QUESTIONS_FIXED = [
     "Is there a person in the room?",

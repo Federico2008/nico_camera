@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from brain.router import RequestClass
 from memory.db import (
@@ -146,7 +146,8 @@ def _format_recent_sessions() -> str:
 
 
 def _format_upcoming_reminders() -> str:
-    rows = get_upcoming_reminders(limit=5)
+    cutoff = (datetime.now() + timedelta(hours=24)).isoformat()
+    rows = [r for r in get_upcoming_reminders(limit=10) if r["trigger_time"] <= cutoff]
     if not rows:
         return ""
     lines = []
@@ -154,7 +155,7 @@ def _format_upcoming_reminders() -> str:
         t = r["trigger_time"][:16].replace("T", " ")
         rep = f" [{r['repeat']}]" if r.get("repeat") and r["repeat"] != "none" else ""
         lines.append(f"  {t}{rep}  {r['text']}")
-    return "[Promemoria in arrivo]\n" + "\n".join(lines)
+    return "[Promemoria nelle prossime 24h]\n" + "\n".join(lines)
 
 
 def _avg_inference_from_events(events: list[dict]) -> int | None:

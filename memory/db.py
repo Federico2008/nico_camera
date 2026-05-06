@@ -1,7 +1,7 @@
 import sqlite3
 import json
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import config
 
@@ -367,7 +367,6 @@ def get_sessions_last_days(n_days: int = 7) -> list[dict]:
     cutoff = datetime.now().replace(
         hour=0, minute=0, second=0, microsecond=0
     )
-    from datetime import timedelta
     cutoff -= timedelta(days=n_days - 1)
     with _conn() as conn:
         rows = conn.execute(

@@ -34,9 +34,18 @@ def _reschedule(r: dict) -> None:
     logger.info("Reminder riprogrammato (%s): '%s' → %s", repeat, r["text"], next_trigger.strftime("%Y-%m-%d %H:%M"))
 
 
+_STALE_THRESHOLD_S = 3600  # reminder più vecchi di 1h → scartati silenziosamente
+
+
 def _check_reminders() -> None:
+    now = datetime.now()
     due = db.get_due_reminders()
     for r in due:
+        age_s = (now - datetime.fromisoformat(r["trigger_time"])).total_seconds()
+        if age_s > _STALE_THRESHOLD_S:
+            logger.info("Reminder stantio ignorato (%.0fh): id=%d '%s'", age_s / 3600, r["id"], r["text"])
+            _reschedule(r)
+            continue
         logger.info("Reminder scattato: id=%d '%s'", r["id"], r["text"])
         tts.speak(r["text"])
         db.mark_reminder_spoken(r["id"])

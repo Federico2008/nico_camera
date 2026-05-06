@@ -40,11 +40,8 @@ def _is_hallucination(text: str) -> bool:
     return any(h in low for h in _HALLUCINATIONS)
 
 
-# Parametri VAD interni
-_CHUNK_SAMPLES = 512          # ~32ms a 16kHz — granularità del rilevamento silenzio
-_SILENCE_RMS_THRESHOLD = 300  # sotto questa soglia = silenzio (int16 scale)
-_MIN_SPEECH_S = 0.5           # secondi minimi prima di iniziare il check silenzio
-_SILENCE_DURATION_S = 2.0     # secondi di silenzio continuo per terminare la registrazione
+# Parametri VAD — tunabili da config.py / .env
+_CHUNK_SAMPLES = 512  # ~32ms a 16kHz — granularità fissa, non tunabile
 
 
 class STTError(RuntimeError):
@@ -108,6 +105,7 @@ class STT:
                 "descrivi, analizza, che ore sono, come va, da quanto sono alla scrivania, "
                 "quanto ho lavorato, quante volte mi sono alzato, "
                 "ricordami di, imposta sveglia alle, svegliami alle, "
+                "segna nota, ricorda che, annota che, aggiungi nota, "
                 "che idee avevo su, cosa devo comprare, lista della spesa, "
                 "riassumi la mia settimana, fammi piano studio per domani."
             ),
@@ -123,10 +121,11 @@ class STT:
         if not _SD_OK:
             raise STTError("sounddevice non installato: pip install sounddevice")
 
-        sr = config.AUDIO_SAMPLE_RATE
-        min_chunks = int(_MIN_SPEECH_S * sr / _CHUNK_SAMPLES)
-        max_chunks = int(max_seconds * sr / _CHUNK_SAMPLES)
-        silence_needed = int(_SILENCE_DURATION_S * sr / _CHUNK_SAMPLES)
+        sr             = config.AUDIO_SAMPLE_RATE
+        rms_threshold  = config.STT_SILENCE_RMS_THRESHOLD
+        min_chunks     = int(config.STT_MIN_SPEECH_S * sr / _CHUNK_SAMPLES)
+        max_chunks     = int(max_seconds * sr / _CHUNK_SAMPLES)
+        silence_needed = int(config.STT_SILENCE_DURATION_S * sr / _CHUNK_SAMPLES)
 
         chunks: list[np.ndarray] = []
         silent_run = 0
@@ -144,7 +143,7 @@ class STT:
                     chunks.append(flat)
 
                     rms = float(np.sqrt(np.mean(flat.astype(np.float32) ** 2)))
-                    is_silent = rms < _SILENCE_RMS_THRESHOLD
+                    is_silent = rms < rms_threshold
 
                     if i >= min_chunks:
                         silent_run = silent_run + 1 if is_silent else 0
@@ -180,13 +179,14 @@ if __name__ == "__main__":
     # 1. test VAD logic (senza hardware)
     # ------------------------------------------------------------------
     print("\n=== 1. logica VAD ===")
-    sr = config.AUDIO_SAMPLE_RATE
-    min_c = int(_MIN_SPEECH_S * sr / _CHUNK_SAMPLES)
-    sil_c = int(_SILENCE_DURATION_S * sr / _CHUNK_SAMPLES)
+    sr            = config.AUDIO_SAMPLE_RATE
+    rms_threshold = config.STT_SILENCE_RMS_THRESHOLD
+    min_c         = int(config.STT_MIN_SPEECH_S * sr / _CHUNK_SAMPLES)
+    sil_c         = int(config.STT_SILENCE_DURATION_S * sr / _CHUNK_SAMPLES)
     print(f"  chunk={_CHUNK_SAMPLES} samples ({_CHUNK_SAMPLES/sr*1000:.0f}ms)")
-    print(f"  min speech chunks:    {min_c}  ({_MIN_SPEECH_S}s)")
-    print(f"  silence chunks needed:{sil_c}  ({_SILENCE_DURATION_S}s)")
-    print(f"  silence RMS threshold:{_SILENCE_RMS_THRESHOLD}")
+    print(f"  min speech chunks:    {min_c}  ({config.STT_MIN_SPEECH_S}s)")
+    print(f"  silence chunks needed:{sil_c}  ({config.STT_SILENCE_DURATION_S}s)")
+    print(f"  silence RMS threshold:{rms_threshold}")
 
     # simula array di audio: 2s parlato + 1.5s silenzio
     speech   = (np.random.randn(int(2.0 * sr)) * 3000).astype(np.float32)
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     for i, c in enumerate(chunks):
         rms = float(np.sqrt(np.mean(c ** 2)))
         if i >= min_c:
-            silent_run = silent_run + 1 if rms < _SILENCE_RMS_THRESHOLD else 0
+            silent_run = silent_run + 1 if rms < rms_threshold else 0
             if silent_run >= sil_c:
                 stop_at = i
                 break
