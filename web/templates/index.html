@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>N.I.C.O</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #030812;
+  --card:      rgba(2, 15, 40, 0.9);
+  --cyan:      #00d4ff;
+  --cyan-glow: rgba(0,212,255,0.25);
+  --amber:     #f0a500;
+  --green:     #00ff88;
+  --red:       #ff3366;
+  --text:      #c8e0ff;
+  --dim:       rgba(200,224,255,0.4);
+  --border:    rgba(0,212,255,0.2);
+  --ui:        'Orbitron', monospace;
+  --mono:      'Share Tech Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  background:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px),
+    var(--bg);
+  background-size: 44px 44px;
+  color: var(--text);
+  font-family: var(--mono);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* scan line */
+body::before {
+  content: '';
+  position: fixed;
+  top: -4px; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent 0%, var(--cyan) 50%, transparent 100%);
+  opacity: 0.35;
+  animation: scan 10s linear infinite;
+  pointer-events: none;
+  z-index: 999;
+}
+@keyframes scan { from { top: -4px; } to { top: 100vh; } }
+
+/* ── HEADER ── */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(3,8,18,0.95);
+  backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 100;
+}
+.logo {
+  font-family: var(--ui); font-weight: 900; font-size: 1.3rem;
+  color: var(--cyan); letter-spacing: .35em;
+  text-shadow: 0 0 24px rgba(0,212,255,.6);
+}
+.logo small {
+  display: block; font-size: .5rem; font-weight: 400;
+  letter-spacing: .25em; color: var(--dim); margin-top: 2px;
+}
+#clock {
+  font-family: var(--ui); font-size: 1.9rem; font-weight: 700;
+  color: var(--cyan); letter-spacing: .08em;
+  text-shadow: 0 0 18px rgba(0,212,255,.5);
+}
+.pill {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--ui); font-size: .6rem; letter-spacing: .2em; color: var(--dim);
+}
+.dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 10px var(--green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
+
+/* ── GRID ── */
+.grid {
+  display: grid;
+  grid-template-columns: 200px 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 14px;
+  padding: 14px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: .5;
+}
+.card::after {
+  content: '';
+  position: absolute; bottom: 0; right: 0;
+  width: 10px; height: 10px;
+  border-bottom: 1px solid var(--cyan);
+  border-right: 1px solid var(--cyan);
+  opacity: .3;
+}
+.card-title {
+  font-family: var(--ui); font-size: .58rem; letter-spacing: .3em;
+  color: var(--cyan); margin-bottom: 14px; text-transform: uppercase;
+}
+
+/* ── STATUS ── */
+.card-status { grid-column: 1; grid-row: 1; }
+.stat { margin-bottom: 12px; }
+.stat-label { font-size: .6rem; color: var(--dim); letter-spacing: .12em; }
+.stat-val {
+  font-family: var(--ui); font-size: .82rem; margin-top: 2px;
+  color: var(--cyan);
+}
+.stat-val.on  { color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,.4); }
+.stat-val.off { color: var(--dim); }
+
+/* ── SYSTEM ── */
+.card-system { grid-column: 1; grid-row: 2; }
+.metric {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 7px 0; border-bottom: 1px solid rgba(0,212,255,.07);
+}
+.metric:last-child { border-bottom: none; }
+.metric-label { font-size: .6rem; color: var(--dim); }
+.metric-val { font-family: var(--ui); font-size: .78rem; color: var(--amber); }
+
+/* ── REMINDERS ── */
+.card-reminders { grid-column: 2; grid-row: 1 / 3; overflow-y: auto; max-height: 780px; }
+.rem-item {
+  padding: 10px 0; border-bottom: 1px solid rgba(0,212,255,.07);
+}
+.rem-item:last-child { border-bottom: none; }
+.rem-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.rem-time { font-family: var(--ui); font-size: .68rem; color: var(--amber); }
+.rem-countdown { font-size: .62rem; color: var(--dim); }
+.rem-text { font-size: .9rem; color: var(--text); line-height: 1.4; }
+.rem-tag { font-size: .58rem; color: var(--dim); letter-spacing: .1em; margin-top: 4px; }
+.btn-done {
+  background: none; border: 1px solid rgba(0,255,136,.3); color: var(--green);
+  font-family: var(--ui); font-size: .52rem; padding: 3px 7px; cursor: pointer;
+  letter-spacing: .15em; border-radius: 2px; transition: all .2s;
+}
+.btn-done:hover { background: rgba(0,255,136,.1); box-shadow: 0 0 8px rgba(0,255,136,.3); }
+
+/* ── NOTES ── */
+.card-notes { grid-column: 3; grid-row: 1; }
+.notes-scroll { overflow-y: auto; max-height: 300px; }
+.notes-scroll::-webkit-scrollbar { width: 2px; }
+.notes-scroll::-webkit-scrollbar-thumb { background: var(--border); }
+.note-item { padding: 8px 0; border-bottom: 1px solid rgba(0,212,255,.07); }
+.note-item:last-child { border-bottom: none; }
+.note-text { font-size: .85rem; color: var(--text); line-height: 1.4; }
+.note-meta { font-size: .58rem; color: var(--dim); margin-top: 3px; }
+
+/* ── SESSIONS ── */
+.card-sessions { grid-column: 3; grid-row: 2; }
+.sess-item {
+  display: grid; grid-template-columns: 1fr auto auto;
+  gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(0,212,255,.07);
+  align-items: baseline;
+}
+.sess-item:last-child { border-bottom: none; }
+.sess-act { font-family: var(--ui); font-size: .68rem; color: var(--cyan); }
+.sess-dur { font-family: var(--ui); font-size: .68rem; color: var(--amber); }
+.sess-time { font-size: .6rem; color: var(--dim); }
+
+.empty { color: var(--dim); font-size: .78rem; text-align: center; padding: 24px 0; }
+
+/* search bar */
+.search-bar {
+  display: flex; gap: 8px; margin-bottom: 12px;
+}
+.search-bar input {
+  flex: 1; background: rgba(0,212,255,.06); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--mono); font-size: .8rem; padding: 5px 10px;
+  border-radius: 2px; outline: none;
+}
+.search-bar input:focus { border-color: var(--cyan); box-shadow: 0 0 8px var(--cyan-glow); }
+.search-bar button {
+  background: var(--cyan-glow); border: 1px solid var(--cyan); color: var(--cyan);
+  font-family: var(--ui); font-size: .55rem; padding: 5px 10px; cursor: pointer;
+  letter-spacing: .15em; border-radius: 2px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    N · I · C · O
+    <small>Neural Intelligence Control Operations</small>
+  </div>
+  <div id="clock">--:--:--</div>
+  <div class="pill">
+    <div class="dot" id="status-dot"></div>
+    <span id="status-txt">ONLINE</span>
+  </div>
+</header>
+
+<div class="grid">
+
+  <!-- STATUS -->
+  <div class="card card-status">
+    <div class="card-title">◈ Stato</div>
+    <div class="stat">
+      <div class="stat-label">ATTIVITÀ</div>
+      <div class="stat-val" id="s-act">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">PRESENZA</div>
+      <div class="stat-val" id="s-room">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">SCRIVANIA</div>
+      <div class="stat-val" id="s-desk">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">AGGIORNATO</div>
+      <div class="stat-val" id="s-upd" style="font-size:.68rem">—</div>
+    </div>
+  </div>
+
+  <!-- SYSTEM -->
+  <div class="card card-system">
+    <div class="card-title">◈ Sistema</div>
+    <div class="metric"><span class="metric-label">EVENTI TOTALI</span><span class="metric-val" id="m-ev">—</span></div>
+    <div class="metric"><span class="metric-label">INFERENZA MEDIA</span><span class="metric-val" id="m-inf">—</span></div>
+    <div class="metric"><span class="metric-label">CACHE HIT</span><span class="metric-val" id="m-cache">—</span></div>
+    <div class="metric"><span class="metric-label">UPTIME</span><span class="metric-val" id="m-up">—</span></div>
+  </div>
+
+  <!-- REMINDERS -->
+  <div class="card card-reminders">
+    <div class="card-title">◈ Promemoria in arrivo</div>
+    <div id="rem-list"><div class="empty">Nessun promemoria</div></div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="card card-notes">
+    <div class="card-title">◈ Note</div>
+    <div class="search-bar">
+      <input id="note-q" type="text" placeholder="cerca nota...">
+      <button onclick="fetchNotes()">GO</button>
+    </div>
+    <div class="notes-scroll" id="note-list"><div class="empty">Nessuna nota</div></div>
+  </div>
+
+  <!-- SESSIONS -->
+  <div class="card card-sessions">
+    <div class="card-title">◈ Sessioni recenti</div>
+    <div id="sess-list"><div class="empty">Nessuna sessione</div></div>
+  </div>
+
+</div>
+
+<script>
+// Clock
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    [n.getHours(), n.getMinutes(), n.getSeconds()]
+      .map(x => String(x).padStart(2,'0')).join(':');
+}
+setInterval(tick, 1000); tick();
+
+function fmtUptime(s) {
+  return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
+}
+
+function fmtCountdown(iso) {
+  const ms = new Date(iso.replace(' ','T')) - new Date();
+  if (ms <= 0) return 'SCADUTO';
+  const h = Math.floor(ms/3600000), m = Math.floor((ms%3600000)/60000);
+  return h > 0 ? `tra ${h}h ${m}m` : `tra ${m}min`;
+}
+
+function fmtDate(iso) {
+  return iso ? iso.substring(0,16).replace('T',' ') : '—';
+}
+
+// Status
+async function fetchStatus() {
+  try {
+    const d = await fetch('/api/status').then(r => r.json());
+    document.getElementById('s-act').textContent  = d.activity || '—';
+
+    const roomEl = document.getElementById('s-room');
+    roomEl.textContent  = d.in_room === null ? '—' : (d.in_room ? 'IN STANZA' : 'ASSENTE');
+    roomEl.className    = 'stat-val ' + (d.in_room ? 'on' : 'off');
+
+    const deskEl = document.getElementById('s-desk');
+    deskEl.textContent  = d.at_desk === null ? '—' : (d.at_desk ? 'ALLA SCRIVANIA' : 'NO');
+    deskEl.className    = 'stat-val ' + (d.at_desk ? 'on' : 'off');
+
+    document.getElementById('s-upd').textContent   = d.last_update || '—';
+    document.getElementById('m-ev').textContent    = d.total_events?.toLocaleString() ?? '—';
+    document.getElementById('m-inf').textContent   = d.avg_inference_ms ? `${Math.round(d.avg_inference_ms)}ms` : '—';
+    document.getElementById('m-cache').textContent = d.cache ? `${d.cache.hits} hit · ${d.cache.entries} entry` : '—';
+    document.getElementById('m-up').textContent    = d.uptime_s ? fmtUptime(d.uptime_s) : '—';
+  } catch {
+    document.getElementById('status-dot').style.cssText = 'background:var(--red);box-shadow:0 0 10px var(--red)';
+    document.getElementById('status-txt').textContent = 'OFFLINE';
+  }
+}
+
+// Reminders
+async function fetchReminders() {
+  const items = await fetch('/api/reminders').then(r => r.json());
+  const el = document.getElementById('rem-list');
+  if (!items.length) { el.innerHTML = '<div class="empty">Nessun promemoria</div>'; return; }
+  el.innerHTML = items.map(r => `
+    <div class="rem-item" id="r${r.id}">
+      <div class="rem-top">
+        <span class="rem-time">${fmtDate(r.trigger_time)}</span>
+        <button class="btn-done" onclick="done(${r.id})">FATTO ✓</button>
+      </div>
+      <div class="rem-text">${r.text}</div>
+      <div class="rem-tag">
+        ${r.category || ''}
+        ${r.repeat && r.repeat !== 'none' ? ' · ' + r.repeat : ''}
+        · <span style="color:var(--cyan)">${fmtCountdown(r.trigger_time)}</span>
+      </div>
+    </div>`).join('');
+}
+
+async function done(id) {
+  await fetch(`/api/reminders/${id}/done`, {method:'POST'});
+  document.getElementById('r'+id)?.remove();
+}
+
+// Notes
+async function fetchNotes() {
+  const q = document.getElementById('note-q').value;
+  const url = q ? `/api/notes?q=${encodeURIComponent(q)}` : '/api/notes';
+  const items = await fetch(url).then(r => r.json());
+  const el = document.getElementById('note-list');
+  if (!items.length) { el.innerHTML = '<div class="empty">Nessuna nota</div>'; return; }
+  el.innerHTML = items.map(n => `
+    <div class="note-item">
+      <div class="note-text">${n.text}</div>
+      <div class="note-meta">${fmtDate(n.created_at)}${n.category ? ' · ' + n.category : ''}</div>
+    </div>`).join('');
+}
+
+// Sessions
+async function fetchSessions() {
+  const items = await fetch('/api/sessions').then(r => r.json());
+  const el = document.getElementById('sess-list');
+  if (!items.length) { el.innerHTML = '<div class="empty">Nessuna sessione</div>'; return; }
+  el.innerHTML = items.map(s => `
+    <div class="sess-item">
+      <span class="sess-act">${s.activity || '—'}</span>
+      <span class="sess-dur">${s.duration_min ? Math.round(s.duration_min)+'min' : 'in corso'}</span>
+      <span class="sess-time">${fmtDate(s.start)}</span>
+    </div>`).join('');
+}
+
+// Enter key for search
+document.getElementById('note-q').addEventListener('keyup', e => { if(e.key==='Enter') fetchNotes(); });
+
+// Poll
+async function refresh() {
+  await Promise.allSettled([fetchStatus(), fetchReminders(), fetchNotes(), fetchSessions()]);
+}
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

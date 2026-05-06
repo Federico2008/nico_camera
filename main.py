@@ -20,10 +20,12 @@ from audio.tts import speak
 from audio.wake_word import WakeWordDetector
 from brain.context_builder import build as build_context
 from brain.gpt import chat, chat_with_vision
+from brain.response_cache import cache_response, get_cached, try_direct_answer
 from brain.router import IntentType, RequestClass, classify, detect_intent
 from memory.aggregator import start_background as start_aggregator
-from monitoring.reminder_scheduler import start as start_reminder_scheduler
 from memory.db import init_db
+from monitoring.reminder_scheduler import start as start_reminder_scheduler
+from web.dashboard import start as start_dashboard
 from monitoring.passive_loop import PassiveLoop
 from privacy.controller import PrivacyController
 
@@ -60,6 +62,7 @@ def main() -> None:
     init_db()
     start_aggregator()
     start_reminder_scheduler()
+    start_dashboard()
 
     _passive_loop = PassiveLoop(
         camera_lock=_camera_lock,
@@ -107,6 +110,17 @@ def _interact() -> None:
 
         logger.info("[richiesta] %s", text)
 
+        direct = try_direct_answer(text)
+        if direct:
+            speak(direct)
+            return
+
+        cached = get_cached(text)
+        if cached:
+            logger.info("[cache] hit")
+            speak(cached)
+            return
+
         intent = detect_intent(text)
         if intent.intent != IntentType.NONE:
             logger.info("[intent] %s", intent.intent.value)
@@ -127,6 +141,7 @@ def _interact() -> None:
             _handle_vision(text, context)
         else:
             reply = chat(text, context)
+            cache_response(text, reply)
             speak(reply)
     finally:
         if _privacy and _privacy.is_monitoring_allowed():
