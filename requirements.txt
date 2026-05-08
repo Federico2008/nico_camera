@@ -1,11 +1,24 @@
+# Core
 python-dotenv>=1.0.0
 openai>=1.30.0
-openai-whisper>=20231117
-picamera2>=0.3.19
-openwakeword>=0.6.0
-sounddevice>=0.4.6
+flask>=3.0.0
 numpy>=1.24.0
 Pillow>=10.0.0
 requests>=2.31.0
-pvporcupine>=4.0.0
-flask>=3.0.0
+
+# Speech-to-text (Whisper)
+openai-whisper>=20231117
+
+# Audio I/O
+sounddevice>=0.4.6
+
+# Wake word detection
+openwakeword>=0.6.0
+pvporcupine>=4.0.0        # opzionale — solo se hai chiave Picovoice
+
+# Camera — Raspberry Pi only, NON installare con pip
+# Installa con: sudo apt-get install python3-picamera2
+# picamera2>=0.3.19
+
+# GPIO — pre-installato su Raspberry Pi OS, opzionale (il codice degrada senza)
+# RPi.GPIO>=0.7.1
