@@ -104,6 +104,8 @@ class IntentType(str, Enum):
     SEARCH_SHOPPING = "search_shopping"  # "ricordami cosa dovevo comprare per X"
     WEEKLY_SUMMARY  = "weekly_summary"   # "riassumi la mia settimana"
     STUDY_PLAN      = "study_plan"       # "fammi piano studio per domani"
+    WEATHER         = "weather"          # "che tempo fa"
+    BRIEFING        = "briefing"         # "buongiorno Nico" → briefing mattutino
     NONE            = "none"
 
 
@@ -160,6 +162,24 @@ _STUDY_PATTERNS = [
     r"(?:fammi|crea|prepara)\s+(?:un\s+)?piano\s+(?:di\s+)?studio\s+per\s+domani",
     r"piano\s+studio\s+(?:per\s+)?domani",
     r"come\s+studiare\s+domani",
+]
+_WEATHER_PATTERNS = [
+    r"che\s+tempo\s+(?:fa|c'è|è)",
+    r"\bmeteo\b",
+    r"\btemperatura\b",
+    r"fa\s+(?:freddo|caldo)",
+    r"\bpiove\b",
+    r"previsioni\s+(?:del\s+tempo|meteo)",
+    r"come\s+sta\s+il\s+tempo",
+    r"devo\s+mettere\s+(?:il\s+)?(?:cappotto|ombrello|giacca)",
+]
+_BRIEFING_PATTERNS = [
+    r"buon\s*giorno",
+    r"briefing\s*mattutino",
+    r"cosa\s+c'è\s+oggi",
+    r"riassunto\s+mattutino",
+    r"cosa\s+devo\s+(?:fare|sapere)\s+(?:oggi|stamattina)",
+    r"dimmi\s+tutto\s+(?:per\s+)?oggi",
 ]
 
 
@@ -392,6 +412,30 @@ def detect_intent(text: str) -> IntentResult:
                 ),
                 gpt_context=ctx,
                 data={"patterns": patterns, "study_sessions": study_sessions},
+            )
+
+    # -- WEATHER --
+    for pat in _WEATHER_PATTERNS:
+        if re.search(pat, low):
+            from brain.weather import get_weather
+            weather = get_weather()
+            if weather:
+                return IntentResult(
+                    intent=IntentType.WEATHER,
+                    response=f"Meteo a {config.WEATHER_CITY}: {weather}.",
+                )
+            return IntentResult(
+                intent=IntentType.WEATHER,
+                response="Meteo non disponibile. Controlla la chiave API o la connessione.",
+            )
+
+    # -- BRIEFING --
+    for pat in _BRIEFING_PATTERNS:
+        if re.search(pat, low):
+            from brain.briefing import build_briefing_text
+            return IntentResult(
+                intent=IntentType.BRIEFING,
+                response=build_briefing_text(),
             )
 
     return IntentResult(intent=IntentType.NONE)

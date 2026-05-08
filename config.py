@@ -37,6 +37,13 @@ PIPER_BIN = Path(os.getenv("PIPER_BIN", str(BASE_DIR.parent / "nico" / "piper" /
 PIPER_VOICE = Path(os.getenv("PIPER_VOICE", str(BASE_DIR.parent / "nico" / "piper" / "voices" / "it_IT-paola-medium.onnx")))
 PIPER_OUTPUT_FILE = Path("/tmp/nico_speech.wav")
 
+# --- Weather ---
+OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
+WEATHER_CITY        = os.getenv("WEATHER_CITY", "Milano")
+
+# --- Morning briefing ---
+BRIEFING_HOUR = int(os.getenv("BRIEFING_HOUR", "8"))
+
 # --- Vision ---
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 MOONDREAM_MODEL = "moondream"

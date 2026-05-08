@@ -2,9 +2,10 @@ import logging
 import threading
 import time
 from collections import deque
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import audio.tts as tts
+import config
 import memory.db as db
 
 logger = logging.getLogger(__name__)
@@ -18,6 +19,7 @@ _REPEAT_DELTAS = {
 
 _recently_fired: deque = deque(maxlen=30)
 _fired_lock = threading.Lock()
+_briefing_done_for: date | None = None
 
 
 def get_recently_fired(since_s: int = 120) -> list[dict]:
@@ -76,10 +78,28 @@ def _check_reminders() -> None:
         _reschedule(r)
 
 
+def _maybe_morning_briefing() -> None:
+    global _briefing_done_for
+    now = datetime.now()
+    if now.hour < config.BRIEFING_HOUR:
+        return
+    today = now.date()
+    if _briefing_done_for == today:
+        return
+    _briefing_done_for = today
+    try:
+        from brain.briefing import build_briefing_text
+        tts.speak(build_briefing_text())
+        logger.info("Briefing mattutino parlato.")
+    except Exception:
+        logger.exception("Errore nel briefing mattutino")
+
+
 def _loop() -> None:
     while True:
         try:
             _check_reminders()
+            _maybe_morning_briefing()
         except Exception:
             logger.exception("Errore nel reminder scheduler")
         time.sleep(_CHECK_INTERVAL_S)
