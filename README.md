@@ -13,29 +13,7 @@ Ascolta la wake word "Nico", risponde a voce tramite GPT-4o, monitora la stanza 
 
 ## Dashboard Web
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  N · I · C · O          14:32:07              ● ONLINE          │
-├──────────┬──────────────────────────┬────────────────────────────┤
-│  Stato   │   Promemoria in arrivo   │        Note                │
-│  ATTIVITÀ│                          │  cerca nota...    [ GO ]   │
-│  PRESENZA│  09/05 10:00   FATTO ✓ ✕ │                            │
-│  SCRIVANIA│  Chiamare il medico      │                            │
-├──────────┤  tra 18h 30min           ├────────────────────────────┤
-│  Sistema │                          │        Sessioni recenti    │
-│  EVENTI  │                          │  lavoro_pc   42min  09:00  │
-│  CACHE   │                          │  studio      90min  ieri   │
-│  TOKEN ▲ │                          │                            │
-├──────────┴──────────────────────────┴────────────────────────────┤
-│  Cronometro        Timer               Aggiungi promemoria        │
-│  00:00.00          [ 5 ]min[ 0 ]sec    [testo...          ]      │
-│  [START] [RESET]   [START] [RESET]     [data+ora] [tipo▼] [+ ADD]│
-├─────────────────────────────────────────────────────────────────┤
-│  Scrivi a Nico                                                   │
-│  ▶ ricordami di chiamare Marco domani alle 10                    │
-│  ◀ Promemoria impostato per 09/05 alle 10:00: chiamare marco.    │
-└─────────────────────────────────────────────────────────────────┘
-```
+![N.I.C.O Dashboard](assets/dashboard.png)
 
 ---
 
