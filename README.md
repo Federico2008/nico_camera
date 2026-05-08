@@ -3,6 +3,40 @@
 Assistente AI personale vocale che gira su **Raspberry Pi 5**.  
 Ascolta la wake word "Nico", risponde a voce tramite GPT-4o, monitora la stanza con la camera e ricorda promemoria.
 
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Raspberry%20Pi%205-C51A4A?style=flat&logo=raspberry-pi&logoColor=white)
+![GPT-4o](https://img.shields.io/badge/AI-GPT--4o-412991?style=flat&logo=openai&logoColor=white)
+![Flask](https://img.shields.io/badge/Dashboard-Flask-000000?style=flat&logo=flask&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat)
+
+---
+
+## Dashboard Web
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  N · I · C · O          14:32:07              ● ONLINE          │
+├──────────┬──────────────────────────┬────────────────────────────┤
+│  Stato   │   Promemoria in arrivo   │        Note                │
+│  ATTIVITÀ│                          │  cerca nota...    [ GO ]   │
+│  PRESENZA│  09/05 10:00   FATTO ✓ ✕ │                            │
+│  SCRIVANIA│  Chiamare il medico      │                            │
+├──────────┤  tra 18h 30min           ├────────────────────────────┤
+│  Sistema │                          │        Sessioni recenti    │
+│  EVENTI  │                          │  lavoro_pc   42min  09:00  │
+│  CACHE   │                          │  studio      90min  ieri   │
+│  TOKEN ▲ │                          │                            │
+├──────────┴──────────────────────────┴────────────────────────────┤
+│  Cronometro        Timer               Aggiungi promemoria        │
+│  00:00.00          [ 5 ]min[ 0 ]sec    [testo...          ]      │
+│  [START] [RESET]   [START] [RESET]     [data+ora] [tipo▼] [+ ADD]│
+├─────────────────────────────────────────────────────────────────┤
+│  Scrivi a Nico                                                   │
+│  ▶ ricordami di chiamare Marco domani alle 10                    │
+│  ◀ Promemoria impostato per 09/05 alle 10:00: chiamare marco.    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## Funzionalità
