@@ -36,7 +36,6 @@ body {
   min-height: 100vh;
 }
 
-/* scan line */
 body::before {
   content: '';
   position: fixed;
@@ -48,6 +47,26 @@ body::before {
   z-index: 999;
 }
 @keyframes scan { from { top: -4px; } to { top: 100vh; } }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
+@keyframes flashborder { 0%,100%{border-color:rgba(255,51,102,.5)} 50%{border-color:rgba(255,51,102,1)} }
+
+/* ── FIRED BANNER ── */
+#fired-banner {
+  display: none; align-items: center; justify-content: space-between;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(255,51,102,.15); border-bottom: 2px solid var(--red);
+  padding: 10px 24px;
+  animation: flashborder 1s ease-in-out 3;
+}
+#fired-text {
+  font-family: var(--ui); font-size: .9rem; color: var(--red);
+  text-shadow: 0 0 16px rgba(255,51,102,.7); letter-spacing: .1em;
+}
+#fired-dismiss {
+  background: none; border: 1px solid var(--red); color: var(--red);
+  font-family: var(--ui); font-size: .52rem; padding: 4px 10px;
+  cursor: pointer; letter-spacing: .15em; border-radius: 2px;
+}
 
 /* ── HEADER ── */
 header {
@@ -72,22 +91,14 @@ header {
   color: var(--cyan); letter-spacing: .08em;
   text-shadow: 0 0 18px rgba(0,212,255,.5);
 }
-.pill {
-  display: flex; align-items: center; gap: 8px;
-  font-family: var(--ui); font-size: .6rem; letter-spacing: .2em; color: var(--dim);
-}
-.dot {
-  width: 9px; height: 9px; border-radius: 50%;
-  background: var(--green); box-shadow: 0 0 10px var(--green);
-  animation: pulse 2s infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
+.pill { display: flex; align-items: center; gap: 8px; font-family: var(--ui); font-size: .6rem; letter-spacing: .2em; color: var(--dim); }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulse 2s infinite; }
 
 /* ── GRID ── */
 .grid {
   display: grid;
   grid-template-columns: 200px 1fr 1fr;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto auto;
   gap: 14px;
   padding: 14px;
   max-width: 1440px;
@@ -121,45 +132,36 @@ header {
   font-family: var(--ui); font-size: .58rem; letter-spacing: .3em;
   color: var(--cyan); margin-bottom: 14px; text-transform: uppercase;
 }
+.empty { color: var(--dim); font-size: .78rem; text-align: center; padding: 24px 0; }
 
 /* ── STATUS ── */
 .card-status { grid-column: 1; grid-row: 1; }
 .stat { margin-bottom: 12px; }
 .stat-label { font-size: .6rem; color: var(--dim); letter-spacing: .12em; }
-.stat-val {
-  font-family: var(--ui); font-size: .82rem; margin-top: 2px;
-  color: var(--cyan);
-}
+.stat-val { font-family: var(--ui); font-size: .82rem; margin-top: 2px; color: var(--cyan); }
 .stat-val.on  { color: var(--green); text-shadow: 0 0 8px rgba(0,255,136,.4); }
 .stat-val.off { color: var(--dim); }
 
 /* ── SYSTEM ── */
 .card-system { grid-column: 1; grid-row: 2; }
-.metric {
-  display: flex; justify-content: space-between; align-items: baseline;
-  padding: 7px 0; border-bottom: 1px solid rgba(0,212,255,.07);
-}
+.metric { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; border-bottom: 1px solid rgba(0,212,255,.07); }
 .metric:last-child { border-bottom: none; }
 .metric-label { font-size: .6rem; color: var(--dim); }
 .metric-val { font-family: var(--ui); font-size: .78rem; color: var(--amber); }
 
 /* ── REMINDERS ── */
 .card-reminders { grid-column: 2; grid-row: 1 / 3; overflow-y: auto; max-height: 780px; }
-.rem-item {
-  padding: 10px 0; border-bottom: 1px solid rgba(0,212,255,.07);
-}
+.rem-item { padding: 10px 0; border-bottom: 1px solid rgba(0,212,255,.07); }
 .rem-item:last-child { border-bottom: none; }
 .rem-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .rem-time { font-family: var(--ui); font-size: .68rem; color: var(--amber); }
 .rem-countdown { font-size: .62rem; color: var(--dim); }
 .rem-text { font-size: .9rem; color: var(--text); line-height: 1.4; }
 .rem-tag { font-size: .58rem; color: var(--dim); letter-spacing: .1em; margin-top: 4px; }
-.btn-done {
-  background: none; border: 1px solid rgba(0,255,136,.3); color: var(--green);
-  font-family: var(--ui); font-size: .52rem; padding: 3px 7px; cursor: pointer;
-  letter-spacing: .15em; border-radius: 2px; transition: all .2s;
-}
+.btn-done { background: none; border: 1px solid rgba(0,255,136,.3); color: var(--green); font-family: var(--ui); font-size: .52rem; padding: 3px 7px; cursor: pointer; letter-spacing: .15em; border-radius: 2px; transition: all .2s; }
 .btn-done:hover { background: rgba(0,255,136,.1); box-shadow: 0 0 8px rgba(0,255,136,.3); }
+.btn-del { background: none; border: 1px solid rgba(255,51,102,.3); color: var(--red); font-family: var(--ui); font-size: .52rem; padding: 3px 7px; cursor: pointer; letter-spacing: .1em; border-radius: 2px; transition: all .2s; margin-left: 4px; }
+.btn-del:hover { background: rgba(255,51,102,.1); box-shadow: 0 0 8px rgba(255,51,102,.3); }
 
 /* ── NOTES ── */
 .card-notes { grid-column: 3; grid-row: 1; }
@@ -170,39 +172,91 @@ header {
 .note-item:last-child { border-bottom: none; }
 .note-text { font-size: .85rem; color: var(--text); line-height: 1.4; }
 .note-meta { font-size: .58rem; color: var(--dim); margin-top: 3px; }
+.search-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+.search-bar input { flex: 1; background: rgba(0,212,255,.06); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: .8rem; padding: 5px 10px; border-radius: 2px; outline: none; }
+.search-bar input:focus { border-color: var(--cyan); box-shadow: 0 0 8px var(--cyan-glow); }
+.search-bar button { background: var(--cyan-glow); border: 1px solid var(--cyan); color: var(--cyan); font-family: var(--ui); font-size: .55rem; padding: 5px 10px; cursor: pointer; letter-spacing: .15em; border-radius: 2px; }
 
 /* ── SESSIONS ── */
 .card-sessions { grid-column: 3; grid-row: 2; }
-.sess-item {
-  display: grid; grid-template-columns: 1fr auto auto;
-  gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(0,212,255,.07);
-  align-items: baseline;
-}
+.sess-item { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(0,212,255,.07); align-items: baseline; }
 .sess-item:last-child { border-bottom: none; }
 .sess-act { font-family: var(--ui); font-size: .68rem; color: var(--cyan); }
 .sess-dur { font-family: var(--ui); font-size: .68rem; color: var(--amber); }
 .sess-time { font-size: .6rem; color: var(--dim); }
 
-.empty { color: var(--dim); font-size: .78rem; text-align: center; padding: 24px 0; }
+/* ── UTILITIES ROW (row 3) ── */
+.card-cronometro { grid-column: 1; grid-row: 3; }
+.card-timer      { grid-column: 2; grid-row: 3; }
+.card-addrem     { grid-column: 3; grid-row: 3; }
 
-/* search bar */
-.search-bar {
-  display: flex; gap: 8px; margin-bottom: 12px;
+.util-display {
+  font-family: var(--ui); font-size: 1.8rem; font-weight: 700;
+  color: var(--cyan); text-shadow: 0 0 16px rgba(0,212,255,.4);
+  text-align: center; letter-spacing: .06em; margin: 10px 0 16px;
 }
-.search-bar input {
-  flex: 1; background: rgba(0,212,255,.06); border: 1px solid var(--border);
-  color: var(--text); font-family: var(--mono); font-size: .8rem; padding: 5px 10px;
-  border-radius: 2px; outline: none;
+.util-btns { display: flex; gap: 8px; justify-content: center; }
+.util-btn {
+  font-family: var(--ui); font-size: .55rem; letter-spacing: .2em;
+  padding: 6px 16px; border-radius: 2px; cursor: pointer; transition: all .2s; border: 1px solid;
 }
-.search-bar input:focus { border-color: var(--cyan); box-shadow: 0 0 8px var(--cyan-glow); }
-.search-bar button {
+.util-btn.start { border-color: var(--green); color: var(--green); background: rgba(0,255,136,.06); }
+.util-btn.start:hover { background: rgba(0,255,136,.15); box-shadow: 0 0 10px rgba(0,255,136,.3); }
+.util-btn.stop  { border-color: var(--red); color: var(--red); background: rgba(255,51,102,.06); }
+.util-btn.stop:hover { background: rgba(255,51,102,.15); box-shadow: 0 0 10px rgba(255,51,102,.3); }
+.util-btn.reset { border-color: var(--dim); color: var(--dim); background: none; }
+.util-btn.reset:hover { border-color: var(--amber); color: var(--amber); }
+
+.timer-inputs { display: flex; align-items: center; gap: 6px; justify-content: center; margin-bottom: 10px; }
+.timer-inputs input {
+  width: 52px; background: rgba(0,212,255,.06); border: 1px solid var(--border);
+  color: var(--cyan); font-family: var(--ui); font-size: .85rem; text-align: center;
+  padding: 4px; border-radius: 2px; outline: none;
+}
+.timer-inputs input:focus { border-color: var(--cyan); }
+.timer-inputs span { color: var(--dim); font-family: var(--ui); font-size: .85rem; }
+
+/* add reminder form */
+.addrem-form { display: flex; flex-direction: column; gap: 10px; }
+.addrem-form input, .addrem-form select {
+  background: rgba(0,212,255,.06); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--mono); font-size: .8rem;
+  padding: 6px 10px; border-radius: 2px; outline: none; width: 100%;
+}
+.addrem-form input:focus { border-color: var(--cyan); box-shadow: 0 0 6px var(--cyan-glow); }
+.addrem-form select option { background: #030812; }
+.addrem-form button {
   background: var(--cyan-glow); border: 1px solid var(--cyan); color: var(--cyan);
-  font-family: var(--ui); font-size: .55rem; padding: 5px 10px; cursor: pointer;
-  letter-spacing: .15em; border-radius: 2px;
+  font-family: var(--ui); font-size: .58rem; padding: 7px; cursor: pointer;
+  letter-spacing: .2em; border-radius: 2px; transition: all .2s;
 }
+.addrem-form button:hover { background: rgba(0,212,255,.18); }
+
+/* ── CHAT (row 4) ── */
+.card-chat { grid-column: 1 / -1; grid-row: 4; }
+.chat-log { overflow-y: auto; max-height: 260px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; padding-right: 4px; }
+.chat-log::-webkit-scrollbar { width: 2px; }
+.chat-log::-webkit-scrollbar-thumb { background: var(--border); }
+.chat-msg { max-width: 72%; padding: 8px 12px; border-radius: 3px; font-size: .85rem; line-height: 1.5; }
+.chat-msg.user { align-self: flex-end; background: rgba(240,165,0,.1); border: 1px solid rgba(240,165,0,.25); color: var(--amber); }
+.chat-msg.nico { align-self: flex-start; background: rgba(0,212,255,.07); border: 1px solid var(--border); color: var(--text); }
+.chat-msg.nico .msg-label { font-family: var(--ui); font-size: .5rem; color: var(--cyan); letter-spacing: .2em; margin-bottom: 4px; }
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input-row input { flex: 1; background: rgba(0,212,255,.06); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: .85rem; padding: 7px 12px; border-radius: 2px; outline: none; }
+.chat-input-row input:focus { border-color: var(--cyan); box-shadow: 0 0 8px var(--cyan-glow); }
+.chat-input-row input::placeholder { color: var(--dim); }
+.chat-input-row button { background: var(--cyan-glow); border: 1px solid var(--cyan); color: var(--cyan); font-family: var(--ui); font-size: .58rem; padding: 7px 16px; cursor: pointer; letter-spacing: .15em; border-radius: 2px; transition: all .2s; white-space: nowrap; }
+.chat-input-row button:hover { background: rgba(0,212,255,.18); }
+.chat-input-row button:disabled { opacity: .4; cursor: default; }
 </style>
 </head>
 <body>
+
+<!-- Fired reminder banner -->
+<div id="fired-banner">
+  <span id="fired-text"></span>
+  <button id="fired-dismiss" onclick="dismissBanner()">CHIUDI ✕</button>
+</div>
 
 <header>
   <div class="logo">
@@ -221,22 +275,10 @@ header {
   <!-- STATUS -->
   <div class="card card-status">
     <div class="card-title">◈ Stato</div>
-    <div class="stat">
-      <div class="stat-label">ATTIVITÀ</div>
-      <div class="stat-val" id="s-act">—</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">PRESENZA</div>
-      <div class="stat-val" id="s-room">—</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">SCRIVANIA</div>
-      <div class="stat-val" id="s-desk">—</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">AGGIORNATO</div>
-      <div class="stat-val" id="s-upd" style="font-size:.68rem">—</div>
-    </div>
+    <div class="stat"><div class="stat-label">ATTIVITÀ</div><div class="stat-val" id="s-act">—</div></div>
+    <div class="stat"><div class="stat-label">PRESENZA</div><div class="stat-val" id="s-room">—</div></div>
+    <div class="stat"><div class="stat-label">SCRIVANIA</div><div class="stat-val" id="s-desk">—</div></div>
+    <div class="stat"><div class="stat-label">AGGIORNATO</div><div class="stat-val" id="s-upd" style="font-size:.68rem">—</div></div>
   </div>
 
   <!-- SYSTEM -->
@@ -246,6 +288,8 @@ header {
     <div class="metric"><span class="metric-label">INFERENZA MEDIA</span><span class="metric-val" id="m-inf">—</span></div>
     <div class="metric"><span class="metric-label">CACHE HIT</span><span class="metric-val" id="m-cache">—</span></div>
     <div class="metric"><span class="metric-label">UPTIME</span><span class="metric-val" id="m-up">—</span></div>
+    <div class="metric"><span class="metric-label">TOKEN SESSIONE</span><span class="metric-val" id="m-tok-s">—</span></div>
+    <div class="metric"><span class="metric-label">TOKEN TOTALI</span><span class="metric-val" id="m-tok-t">—</span></div>
   </div>
 
   <!-- REMINDERS -->
@@ -270,119 +314,60 @@ header {
     <div id="sess-list"><div class="empty">Nessuna sessione</div></div>
   </div>
 
+  <!-- STOPWATCH -->
+  <div class="card card-cronometro">
+    <div class="card-title">◈ Cronometro</div>
+    <div class="util-display" id="sw-display">00:00.00</div>
+    <div class="util-btns">
+      <button class="util-btn start" id="sw-btn" onclick="swToggle()">START</button>
+      <button class="util-btn reset" onclick="swReset()">RESET</button>
+    </div>
+  </div>
+
+  <!-- TIMER -->
+  <div class="card card-timer">
+    <div class="card-title">◈ Timer</div>
+    <div class="timer-inputs">
+      <input id="timer-min" type="number" min="0" max="99" value="5" placeholder="mm">
+      <span>min</span>
+      <input id="timer-sec" type="number" min="0" max="59" value="0" placeholder="ss">
+      <span>sec</span>
+    </div>
+    <div class="util-display" id="timer-display">00:00</div>
+    <div class="util-btns">
+      <button class="util-btn start" id="timer-btn" onclick="timerToggle()">START</button>
+      <button class="util-btn reset" onclick="timerReset()">RESET</button>
+    </div>
+  </div>
+
+  <!-- ADD REMINDER / ALARM -->
+  <div class="card card-addrem">
+    <div class="card-title">◈ Aggiungi promemoria</div>
+    <div class="addrem-form">
+      <input id="add-rem-text" type="text" placeholder="es. Chiamare il medico">
+      <input id="add-rem-dt" type="datetime-local">
+      <select id="add-rem-cat">
+        <option value="promemoria">Promemoria</option>
+        <option value="sveglia">Sveglia (ripete 4×)</option>
+      </select>
+      <button onclick="addReminder()">+ AGGIUNGI</button>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="card card-chat">
+    <div class="card-title">◈ Scrivi a Nico</div>
+    <div class="chat-log" id="chat-log">
+      <div class="chat-msg nico"><div class="msg-label">N·I·C·O</div>Ciao! Scrivi un comando o una domanda.</div>
+    </div>
+    <div class="chat-input-row">
+      <input id="chat-input" type="text" placeholder="es. ricordami di chiamare Marco domani alle 10...">
+      <button id="chat-send" onclick="sendChat()">INVIA</button>
+    </div>
+  </div>
+
 </div>
 
-<script>
-// Clock
-function tick() {
-  const n = new Date();
-  document.getElementById('clock').textContent =
-    [n.getHours(), n.getMinutes(), n.getSeconds()]
-      .map(x => String(x).padStart(2,'0')).join(':');
-}
-setInterval(tick, 1000); tick();
-
-function fmtUptime(s) {
-  return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
-}
-
-function fmtCountdown(iso) {
-  const ms = new Date(iso.replace(' ','T')) - new Date();
-  if (ms <= 0) return 'SCADUTO';
-  const h = Math.floor(ms/3600000), m = Math.floor((ms%3600000)/60000);
-  return h > 0 ? `tra ${h}h ${m}m` : `tra ${m}min`;
-}
-
-function fmtDate(iso) {
-  return iso ? iso.substring(0,16).replace('T',' ') : '—';
-}
-
-// Status
-async function fetchStatus() {
-  try {
-    const d = await fetch('/api/status').then(r => r.json());
-    document.getElementById('s-act').textContent  = d.activity || '—';
-
-    const roomEl = document.getElementById('s-room');
-    roomEl.textContent  = d.in_room === null ? '—' : (d.in_room ? 'IN STANZA' : 'ASSENTE');
-    roomEl.className    = 'stat-val ' + (d.in_room ? 'on' : 'off');
-
-    const deskEl = document.getElementById('s-desk');
-    deskEl.textContent  = d.at_desk === null ? '—' : (d.at_desk ? 'ALLA SCRIVANIA' : 'NO');
-    deskEl.className    = 'stat-val ' + (d.at_desk ? 'on' : 'off');
-
-    document.getElementById('s-upd').textContent   = d.last_update || '—';
-    document.getElementById('m-ev').textContent    = d.total_events?.toLocaleString() ?? '—';
-    document.getElementById('m-inf').textContent   = d.avg_inference_ms ? `${Math.round(d.avg_inference_ms)}ms` : '—';
-    document.getElementById('m-cache').textContent = d.cache ? `${d.cache.hits} hit · ${d.cache.entries} entry` : '—';
-    document.getElementById('m-up').textContent    = d.uptime_s ? fmtUptime(d.uptime_s) : '—';
-  } catch {
-    document.getElementById('status-dot').style.cssText = 'background:var(--red);box-shadow:0 0 10px var(--red)';
-    document.getElementById('status-txt').textContent = 'OFFLINE';
-  }
-}
-
-// Reminders
-async function fetchReminders() {
-  const items = await fetch('/api/reminders').then(r => r.json());
-  const el = document.getElementById('rem-list');
-  if (!items.length) { el.innerHTML = '<div class="empty">Nessun promemoria</div>'; return; }
-  el.innerHTML = items.map(r => `
-    <div class="rem-item" id="r${r.id}">
-      <div class="rem-top">
-        <span class="rem-time">${fmtDate(r.trigger_time)}</span>
-        <button class="btn-done" onclick="done(${r.id})">FATTO ✓</button>
-      </div>
-      <div class="rem-text">${r.text}</div>
-      <div class="rem-tag">
-        ${r.category || ''}
-        ${r.repeat && r.repeat !== 'none' ? ' · ' + r.repeat : ''}
-        · <span style="color:var(--cyan)">${fmtCountdown(r.trigger_time)}</span>
-      </div>
-    </div>`).join('');
-}
-
-async function done(id) {
-  await fetch(`/api/reminders/${id}/done`, {method:'POST'});
-  document.getElementById('r'+id)?.remove();
-}
-
-// Notes
-async function fetchNotes() {
-  const q = document.getElementById('note-q').value;
-  const url = q ? `/api/notes?q=${encodeURIComponent(q)}` : '/api/notes';
-  const items = await fetch(url).then(r => r.json());
-  const el = document.getElementById('note-list');
-  if (!items.length) { el.innerHTML = '<div class="empty">Nessuna nota</div>'; return; }
-  el.innerHTML = items.map(n => `
-    <div class="note-item">
-      <div class="note-text">${n.text}</div>
-      <div class="note-meta">${fmtDate(n.created_at)}${n.category ? ' · ' + n.category : ''}</div>
-    </div>`).join('');
-}
-
-// Sessions
-async function fetchSessions() {
-  const items = await fetch('/api/sessions').then(r => r.json());
-  const el = document.getElementById('sess-list');
-  if (!items.length) { el.innerHTML = '<div class="empty">Nessuna sessione</div>'; return; }
-  el.innerHTML = items.map(s => `
-    <div class="sess-item">
-      <span class="sess-act">${s.activity || '—'}</span>
-      <span class="sess-dur">${s.duration_min ? Math.round(s.duration_min)+'min' : 'in corso'}</span>
-      <span class="sess-time">${fmtDate(s.start)}</span>
-    </div>`).join('');
-}
-
-// Enter key for search
-document.getElementById('note-q').addEventListener('keyup', e => { if(e.key==='Enter') fetchNotes(); });
-
-// Poll
-async function refresh() {
-  await Promise.allSettled([fetchStatus(), fetchReminders(), fetchNotes(), fetchSessions()]);
-}
-refresh();
-setInterval(refresh, 5000);
-</script>
+<script src="/static/app.js"></script>
 </body>
 </html>

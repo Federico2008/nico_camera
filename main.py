@@ -79,7 +79,11 @@ def main() -> None:
     speak("Sistema avviato. Dimmi Nico quando sei pronto.")
     logger.info("Sistema operativo — in ascolto.")
 
-    signal.pause()   # blocca il main thread, il sistema gira nei daemon thread
+    try:
+        signal.pause()   # blocca il main thread, il sistema gira nei daemon thread
+    except KeyboardInterrupt:
+        logger.info("KeyboardInterrupt — spegnimento.")
+        _trigger_shutdown()
 
 
 # ---------------------------------------------------------------------------
@@ -130,46 +134,48 @@ def _interact() -> None:
     if _privacy:
         _privacy.led_blink()
     try:
-        speak("Dimmi.")
+        for turn in range(6):
+            speak("Dimmi.")
 
-        text = _stt.record_and_transcribe(max_seconds=8.0)
-        if not text:
-            speak("Non ho sentito niente.")
-            return
-
-        logger.info("[richiesta] %s", text)
-
-        direct = try_direct_answer(text)
-        if direct:
-            speak(direct)
-            return
-
-        cached = get_cached(text)
-        if cached:
-            logger.info("[cache] hit")
-            speak(cached)
-            return
-
-        intent = detect_intent(text)
-        if intent.intent != IntentType.NONE:
-            logger.info("[intent] %s", intent.intent.value)
-            if intent.response is not None:
-                speak(intent.response)
-                return
-            if intent.gpt_prompt is not None:
-                _stream_to_voice(chat_stream(intent.gpt_prompt, intent.gpt_context or ""))
+            text = _stt.record_and_transcribe(max_seconds=8.0)
+            if not text:
+                if turn == 0:
+                    speak("Non ho sentito niente.")
                 return
 
-        result = classify(text)
-        logger.info("[routing] Classe %s — %s", result.cls.value, result.reason)
+            logger.info("[richiesta] %s", text)
 
-        context = build_context(result.cls, user_text=text)
+            direct = try_direct_answer(text)
+            if direct:
+                speak(direct)
+                continue
 
-        if result.cls == RequestClass.C:
-            _handle_vision(text, context)
-        else:
-            reply = _stream_to_voice(chat_stream(text, context))
-            cache_response(text, reply)
+            cached = get_cached(text)
+            if cached:
+                logger.info("[cache] hit")
+                speak(cached)
+                continue
+
+            intent = detect_intent(text)
+            if intent.intent != IntentType.NONE:
+                logger.info("[intent] %s", intent.intent.value)
+                if intent.response is not None:
+                    speak(intent.response)
+                    continue
+                if intent.gpt_prompt is not None:
+                    _stream_to_voice(chat_stream(intent.gpt_prompt, intent.gpt_context or ""))
+                    continue
+
+            result = classify(text)
+            logger.info("[routing] Classe %s — %s", result.cls.value, result.reason)
+
+            context = build_context(result.cls, user_text=text)
+
+            if result.cls == RequestClass.C:
+                _handle_vision(text, context)
+            else:
+                reply = _stream_to_voice(chat_stream(text, context))
+                cache_response(text, reply)
     finally:
         if _privacy and _privacy.is_monitoring_allowed():
             _privacy.led_on()
@@ -226,15 +232,28 @@ def _setup_logging() -> None:
 
 def _trigger_shutdown() -> None:
     """Punto unico di spegnimento — chiamato da SIGINT/SIGTERM e dal kill switch hardware."""
-    if _wake_detector:
-        _wake_detector.stop()
-    if _passive_loop:
-        _passive_loop.stop()
-    if _privacy:
-        _privacy.set_monitoring(False)
-        _privacy.shutdown()
-    speak("Arrivederci.")
-    sys.exit(0)
+    try:
+        if _wake_detector:
+            _wake_detector.stop()
+    except Exception:
+        pass
+    try:
+        if _passive_loop:
+            _passive_loop.stop()
+    except Exception:
+        pass
+    try:
+        if _privacy:
+            _privacy.set_monitoring(False)
+            _privacy.shutdown()
+    except Exception:
+        pass
+    try:
+        speak("Arrivederci.")
+    except Exception:
+        pass
+    import os
+    os._exit(0)
 
 
 def _setup_signals() -> None:
@@ -277,6 +296,7 @@ if __name__ == "__main__":
 
     _this.speak            = lambda text: spoken.append(text)
     _this.chat             = lambda text, ctx="": f"[risposta a: {text[:30]}]"
+    _this.chat_stream      = lambda text, ctx="": iter([f"[risposta a: {text[:30]}]"])
     _this.chat_with_vision = lambda text, imgs, ctx="": f"[visione: {len(imgs)} frame]"
 
     _stt_queries: list[str] = []

@@ -1,6 +1,7 @@
 import logging
 import threading
 import time
+from collections import deque
 from datetime import datetime, timedelta
 
 import audio.tts as tts
@@ -8,12 +9,21 @@ import memory.db as db
 
 logger = logging.getLogger(__name__)
 
-_CHECK_INTERVAL_S = 60
+_CHECK_INTERVAL_S = 30
 
 _REPEAT_DELTAS = {
     "daily":  timedelta(days=1),
     "weekly": timedelta(weeks=1),
 }
+
+_recently_fired: deque = deque(maxlen=30)
+_fired_lock = threading.Lock()
+
+
+def get_recently_fired(since_s: int = 120) -> list[dict]:
+    cutoff = time.time() - since_s
+    with _fired_lock:
+        return [dict(r) for r in _recently_fired if r.get("fired_at", 0) >= cutoff]
 
 
 def _reschedule(r: dict) -> None:
@@ -34,7 +44,9 @@ def _reschedule(r: dict) -> None:
     logger.info("Reminder riprogrammato (%s): '%s' → %s", repeat, r["text"], next_trigger.strftime("%Y-%m-%d %H:%M"))
 
 
-_STALE_THRESHOLD_S = 3600  # reminder più vecchi di 1h → scartati silenziosamente
+_STALE_THRESHOLD_S = 3600
+_ALARM_REPEATS     = 4
+_ALARM_PAUSE_S     = 2.5
 
 
 def _check_reminders() -> None:
@@ -46,8 +58,20 @@ def _check_reminders() -> None:
             logger.info("Reminder stantio ignorato (%.0fh): id=%d '%s'", age_s / 3600, r["id"], r["text"])
             _reschedule(r)
             continue
+
         logger.info("Reminder scattato: id=%d '%s'", r["id"], r["text"])
-        tts.speak(r["text"])
+
+        with _fired_lock:
+            _recently_fired.append({**r, "fired_at": time.time()})
+
+        if r.get("category") == "sveglia":
+            for i in range(_ALARM_REPEATS):
+                tts.speak(r["text"])
+                if i < _ALARM_REPEATS - 1:
+                    time.sleep(_ALARM_PAUSE_S)
+        else:
+            tts.speak(r["text"])
+
         db.mark_reminder_spoken(r["id"])
         _reschedule(r)
 

@@ -304,6 +304,11 @@ def mark_reminder_done(reminder_id: int) -> None:
         conn.execute("UPDATE reminders SET done = 1 WHERE id = ?", (reminder_id,))
 
 
+def delete_reminder(reminder_id: int) -> None:
+    with _conn() as conn:
+        conn.execute("DELETE FROM reminders WHERE id = ?", (reminder_id,))
+
+
 def get_upcoming_reminders(limit: int = 10) -> list[dict]:
     now = datetime.now().isoformat()
     with _conn() as conn:

@@ -116,9 +116,18 @@ class IntentResult:
     data: dict[str, Any] = field(default_factory=dict)
 
 
+_DAYS_RE = r"(?:lunedì?|martedì?|mercoledì?|giovedì?|venerdì?|sabato|domenica)"
+_TIME_EXPR_RE = (
+    r"(domani\s+alle\s+\d{1,2}(?::\d{2})?"
+    + r"|domani"
+    + r"|" + _DAYS_RE + r"\s+alle\s+\d{1,2}(?::\d{2})?"
+    + r"|" + _DAYS_RE
+    + r"|(?:alle|per\s+le)\s+\d{1,2}(?::\d{2})?"
+    + r"|tra\s+\d+\s+(?:ore?|minut[io]))"
+)
 _REMINDER_PATTERNS = [
-    r"ricordami\s+di\s+(.+?)\s+(?:alle|per le)\s+(\d{1,2})(?::(\d{2}))?",
-    r"ricordami\s+(?:alle|per le)\s+(\d{1,2})(?::(\d{2}))?\s+di\s+(.+)",
+    r"ricordami\s+di\s+(.+?)\s+" + _TIME_EXPR_RE,
+    r"ricordami\s+" + _TIME_EXPR_RE + r"\s+di\s+(.+)",
 ]
 _ALARM_PATTERNS = [
     r"(?:imposta|metti)\s+(?:una\s+)?sveglia\s+(?:alle|per le)\s+(\d{1,2})(?::(\d{2}))?",
@@ -162,6 +171,61 @@ def _parse_time(hour: str, minute: str | None, base: datetime | None = None) -> 
     if target <= datetime.now():
         target += timedelta(days=1)
     return target
+
+
+_DAY_NAMES_IT: dict[str, int] = {
+    "lunedì": 0, "lunedi": 0,
+    "martedì": 1, "martedi": 1,
+    "mercoledì": 2, "mercoledi": 2,
+    "giovedì": 3, "giovedi": 3,
+    "venerdì": 4, "venerdi": 4,
+    "sabato": 5,
+    "domenica": 6,
+}
+
+
+def _next_weekday_dt(weekday_num: int) -> datetime:
+    now = datetime.now()
+    days_ahead = weekday_num - now.weekday()
+    if days_ahead <= 0:
+        days_ahead += 7
+    return now + timedelta(days=days_ahead)
+
+
+def _parse_reminder_time(expr: str) -> datetime:
+    """Parse Italian time/date expression. Fallback: domani 9:00."""
+    t = expr.strip().lower()
+    now = datetime.now()
+
+    m = re.match(r"tra\s+(\d+)\s+minut[io]", t)
+    if m:
+        return now + timedelta(minutes=int(m.group(1)))
+
+    m = re.match(r"tra\s+(\d+)\s+or[ae]", t)
+    if m:
+        return now + timedelta(hours=int(m.group(1)))
+
+    m = re.match(r"domani(?:\s+alle\s+(\d{1,2})(?::(\d{2}))?)?", t)
+    if m:
+        base = now + timedelta(days=1)
+        if m.group(1):
+            return _parse_time(m.group(1), m.group(2), base)
+        return base.replace(hour=9, minute=0, second=0, microsecond=0)
+
+    for day_name, day_num in _DAY_NAMES_IT.items():
+        if t.startswith(day_name):
+            rest = t[len(day_name):].strip()
+            base = _next_weekday_dt(day_num)
+            m2 = re.match(r"alle\s+(\d{1,2})(?::(\d{2}))?", rest)
+            if m2:
+                return _parse_time(m2.group(1), m2.group(2), base)
+            return base.replace(hour=9, minute=0, second=0, microsecond=0)
+
+    m = re.match(r"(?:alle|per\s+le)\s+(\d{1,2})(?::(\d{2}))?", t)
+    if m:
+        return _parse_time(m.group(1), m.group(2))
+
+    return (now + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
 
 
 def _format_sessions_summary(sessions: list[dict]) -> str:
@@ -232,24 +296,23 @@ def detect_intent(text: str) -> IntentResult:
             )
 
     # -- REMINDER --
-    for pat in _REMINDER_PATTERNS:
+    for i, pat in enumerate(_REMINDER_PATTERNS):
         m = re.search(pat, low)
         if m:
-            groups = m.groups()
-            if pat.startswith(r"ricordami\s+di"):
-                reminder_text, hour, minute = groups[0], groups[1], groups[2]
+            if i == 0:
+                reminder_text, time_expr = m.group(1).strip(), m.group(2).strip()
             else:
-                hour, minute, reminder_text = groups[0], groups[1], groups[2]
-            trigger = _parse_time(hour, minute)
+                time_expr, reminder_text = m.group(1).strip(), m.group(2).strip()
+            trigger = _parse_reminder_time(time_expr)
             reminder_id = db.add_reminder(
-                text=reminder_text.strip().capitalize(),
+                text=reminder_text.capitalize(),
                 trigger_time=trigger,
                 category="promemoria",
             )
-            t_str = trigger.strftime("%H:%M")
+            t_str = trigger.strftime("%d/%m alle %H:%M")
             return IntentResult(
                 intent=IntentType.REMINDER,
-                response=f"Promemoria impostato per le {t_str}: {reminder_text.strip()}.",
+                response=f"Promemoria impostato per {t_str}: {reminder_text}.",
                 data={"reminder_id": reminder_id, "trigger_time": trigger.isoformat()},
             )
 

@@ -1,4 +1,5 @@
 import logging
+import threading
 from collections.abc import Iterator
 from typing import Sequence
 
@@ -7,6 +8,33 @@ from openai import OpenAI, APIError, APIConnectionError, RateLimitError
 import config
 
 logger = logging.getLogger(__name__)
+
+_token_lock = threading.Lock()
+_session_tokens: dict[str, int] = {"prompt": 0, "completion": 0}
+
+
+def _record_usage(prompt: int, completion: int) -> None:
+    import memory.db as _db
+    with _token_lock:
+        _session_tokens["prompt"]     += prompt
+        _session_tokens["completion"] += completion
+        prev_p = int(_db.get_preference("tok_prompt_total",     "0") or 0)
+        prev_c = int(_db.get_preference("tok_completion_total", "0") or 0)
+        _db.set_preference("tok_prompt_total",     str(prev_p + prompt),     source="gpt")
+        _db.set_preference("tok_completion_total", str(prev_c + completion), source="gpt")
+
+
+def get_token_stats() -> dict:
+    import memory.db as _db
+    with _token_lock:
+        sp, sc = _session_tokens["prompt"], _session_tokens["completion"]
+    tp = int(_db.get_preference("tok_prompt_total",     "0") or 0)
+    tc = int(_db.get_preference("tok_completion_total", "0") or 0)
+    return {
+        "session": {"prompt": sp, "completion": sc, "total": sp + sc},
+        "total":   {"prompt": tp, "completion": tc, "total": tp + tc},
+    }
+
 
 _SYSTEM_BASE = """Sei Nico, un assistente AI personale che gira su Raspberry Pi 5.
 Parli sempre in italiano. Rispondi in modo conciso e naturale — le tue risposte \
@@ -56,11 +84,15 @@ def chat_stream(user_text: str, context: str = "") -> Iterator[str]:
             messages=[{"role": "system", "content": system},
                       {"role": "user",   "content": user_text}],
             stream=True,
+            stream_options={"include_usage": True},
         )
         for chunk in stream:
-            delta = chunk.choices[0].delta.content
-            if delta:
-                yield delta
+            if chunk.usage:
+                _record_usage(chunk.usage.prompt_tokens, chunk.usage.completion_tokens)
+            if chunk.choices:
+                delta = chunk.choices[0].delta.content
+                if delta:
+                    yield delta
     except RateLimitError:
         yield "Ho bisogno di un momento, riprova tra poco."
     except APIConnectionError:
@@ -107,6 +139,8 @@ def _complete(model: str, system: str, messages: list[dict]) -> str:
             model=model,
             messages=[{"role": "system", "content": system}, *messages],
         )
+        if resp.usage:
+            _record_usage(resp.usage.prompt_tokens, resp.usage.completion_tokens)
         text = resp.choices[0].message.content or ""
         return text.strip()
     except RateLimitError:
