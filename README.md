@@ -87,7 +87,15 @@ Chiavi necessarie:
 - `OPENROUTER_API_KEY` — da [openrouter.ai/keys](https://openrouter.ai/keys) (gratuito con crediti iniziali)
 - `PORCUPINE_ACCESS_KEY` — da [console.picovoice.ai](https://console.picovoice.ai) *(opzionale, fallback gratuito disponibile)*
 
-### 3. Installa le dipendenze
+### 3. Crea il virtual environment
+
+```bash
+# picamera2 richiede --system-site-packages per accedere ai pacchetti di sistema
+python3 -m venv --system-site-packages venv
+source venv/bin/activate
+```
+
+### 4. Installa le dipendenze
 
 ```bash
 chmod +x install.sh
@@ -99,6 +107,15 @@ Lo script installa automaticamente:
 - pacchetti Python nel venv
 - modelli openWakeWord
 - ollama + moondream
+
+> **Installazione manuale** (senza lo script):
+> ```bash
+> sudo apt-get install -y python3-picamera2
+> python3 -m venv --system-site-packages venv
+> source venv/bin/activate
+> pip install -r requirements.txt
+> python3 -c "import openwakeword; openwakeword.utils.download_models()"
+> ```
 
 ### 4. Configura Piper TTS
 
