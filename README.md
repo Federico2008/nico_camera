@@ -26,6 +26,8 @@ Ascolta la wake word "Nico", risponde a voce tramite GPT-4o, monitora la stanza 
 - **Monitoraggio passivo** — moondream (Ollama) analizza la stanza ogni ~60s e traccia routine
 - **Promemoria e sveglie** — imposta con la voce o dal web, Nico parla all'orario stabilito
 - **Note vocali** — "segna nota: ...", "ricorda che ..."
+- **Meteo in tempo reale** — OpenWeatherMap: "che tempo fa?" → temperatura, descrizione, umidità
+- **Briefing mattutino** — "buongiorno Nico" o automatico all'ora configurata: meteo + promemoria del giorno + ultime note
 - **Dashboard web** — interfaccia su `http://raspberrypi:5000` con cronometro, timer, chat testuale, token usati
 
 ---
@@ -64,6 +66,9 @@ nano .env   # inserisci le tue chiavi API
 Chiavi necessarie:
 - `OPENROUTER_API_KEY` — da [openrouter.ai/keys](https://openrouter.ai/keys) (gratuito con crediti iniziali)
 - `PORCUPINE_ACCESS_KEY` — da [console.picovoice.ai](https://console.picovoice.ai) *(opzionale, fallback gratuito disponibile)*
+- `OPENWEATHER_API_KEY` — da [openweathermap.org/api](https://openweathermap.org/api) *(gratuito, piano "Current Weather Data")*
+- `WEATHER_CITY` — città per il meteo (es. `Milano`)
+- `BRIEFING_HOUR` — ora del briefing automatico in formato 24h (default `8`)
 
 ### 3. Crea il virtual environment
 
@@ -131,7 +136,9 @@ nico-camera/
 │   ├── gpt.py               # chiamate OpenRouter (chat, stream, vision) + token tracking
 │   ├── router.py            # classificazione richieste (A/B/C) + intent detection
 │   ├── context_builder.py   # assembla il contesto da DB per GPT
-│   └── response_cache.py    # cache risposte frequenti
+│   ├── response_cache.py    # cache risposte frequenti
+│   ├── weather.py           # meteo in tempo reale (OpenWeatherMap)
+│   └── briefing.py          # composizione briefing mattutino
 ├── memory/
 │   ├── db.py                # SQLite: eventi, sessioni, note, promemoria, preferenze
 │   ├── aggregator.py        # raggruppa eventi in sessioni
@@ -185,7 +192,11 @@ Apri `http://raspberrypi:5000` da qualsiasi dispositivo sulla stessa rete.
 "Da quanto sono alla scrivania?"        → dati dal monitoraggio passivo
 "Fammi un piano studio per domani"      → piano personalizzato
 "Riassumi la mia settimana"             → riepilogo sessioni
+"Che tempo fa?"                         → meteo in tempo reale (OpenWeatherMap)
+"Buongiorno Nico"                       → briefing: meteo + promemoria + ultime note
 ```
+
+> Il briefing mattutino parte anche in automatico ogni giorno all'ora impostata in `BRIEFING_HOUR`.
 
 ---
 
